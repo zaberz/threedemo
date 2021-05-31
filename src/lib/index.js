@@ -17,7 +17,7 @@ export function createSide(color = '#eee', width = sideLong, height = sideShort)
     const geometry = new THREE.BoxGeometry(width, height, thickness)
     return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial(
         {
-            map: textureLoader.load('./texture.png'),
+            map: textureLoader.load('./mesh.svg'),
             metalness: 0.2,
             roughness: 0.07,
             doubleSided: true,
