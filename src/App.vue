@@ -9,21 +9,22 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import TWEEN from '@tweenjs/tween.js'
-import { createSide, createBox, sideLong, sideShort, initDefaultLighting } from '@/lib'
+import { createSide, initDefaultLighting, sideLong, sideShort } from '@/lib'
 import dat from 'dat.gui'
-import {thickness} from './lib'
+import { thickness } from './lib'
+import { addModelLabels } from '@/lib/label'
 
 export default {
     name: 'index',
     mounted() {
-      let self = this
+        let self = this
         let scene = new THREE.Scene()
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
-        camera.position.x = 2;
-        camera.position.y = -25.83337550545299;
-        camera.position.z = 30.25160353506808;
-        camera.lookAt(scene.position);
+        camera.position.x = 2
+        camera.position.y = -15.83337550545299
+        camera.position.z = 40.25160353506808
+        camera.lookAt(scene.position)
 
         let renderer = new THREE.WebGLRenderer({
             canvas: this.$refs['render'],
@@ -35,34 +36,35 @@ export default {
         const controls = new OrbitControls(camera, renderer.domElement)
         controls.update()
 
-
         initDefaultLighting(scene, new THREE.Vector3(-10, 20, 40))
-        scene.add(new THREE.AmbientLight(0x444444));
+        scene.add(new THREE.AmbientLight(0x444444))
 
         init(sideLong, sideShort, thickness)
         animate()
-
+        render()
 
         function init(sideLong, sideShort, thickness) {
+            if (self.rootSide) {
+                scene.remove(self.rootSide)
+            }
 
-          if (self.rootSide)  scene.remove(self.rootSide)
-
-          const rootSide = createSide('#cccccc', sideLong, sideShort)
+            const rootSide = createSide('#cccccc', sideLong, sideShort)
             const leftSide = createSide('#ff0000', sideLong, sideShort)
             const rightSide = createSide('#00ff00', sideLong, sideShort)
             const bottomSide = createSide('#0000ff', sideLong, sideLong)
             const topSide = createSide('#ffffff', sideLong, sideLong)
-            const topChildrenSide = createSide('#ffff00', sideLong, sideShort);
+            const topChildrenSide = createSide('#ffff00', sideLong, sideShort)
             topSide.add(topChildrenSide)
             topChildrenSide.geometry.translate(0, sideShort / 2, 0)
             topChildrenSide.position.set(0, sideLong, 0)
 
+            addModelLabels(scene)
 
             const aroundSideList = [
                 leftSide,
                 rightSide,
                 bottomSide,
-                topSide
+                topSide,
             ]
             rootSide.position.set(0, 0, 0)
             leftSide.geometry.translate(-sideLong / 2, 0, 0)
@@ -77,69 +79,73 @@ export default {
             aroundSideList.forEach(side => rootSide.add(side))
             scene.add(rootSide)
 
-          self.rootSide = rootSide
+            self.rootSide = rootSide
 
-
-
-            var start = { value: 0 }
-            var finish = { value: Math.PI / 2 }
-            var angle = 0
+            const start = { value: 2 }
+            const finish = { value: 10 }
+            const angle = Math.PI / 2
+            leftSide.rotation.y = angle
+            rightSide.rotation.y = -angle
+            bottomSide.rotation.x = -angle
+            topSide.rotation.x = angle
+            topChildrenSide.rotation.x = angle
             new TWEEN.Tween(start).to(finish, 3000).
                 repeat(Infinity).
                 repeatDelay(1000).
                 yoyo(true).
                 easing(TWEEN.Easing.Sinusoidal.InOut).
                 onUpdate(function() {
-                    angle = start.value
-                    leftSide.rotation.y = angle
-                    rightSide.rotation.y = -angle
-                    bottomSide.rotation.x = -angle
-                    topSide.rotation.x = angle
-                    topChildrenSide.rotation.x = angle
+                    // const angle = start.value
+                    // camera.position.x = start.value
+                    // leftSide.rotation.y = angle
+                    // rightSide.rotation.y = -angle
+                    // bottomSide.rotation.x = -angle
+                    // topSide.rotation.x = angle
+                    // topChildrenSide.rotation.x = angle
                 }).
                 start()
         }
+
         function animate() {
             requestAnimationFrame(animate)
             TWEEN.update()
             render()
         }
+
         function render() {
             renderer.render(scene, camera)
         }
 
-      initDatGui()
-      function initDatGui() {
-        let gui = new dat.GUI({
-          name: 'MY GUI'
-        })
-        var option = {
-          width: 8,
-          height: 4,
-          depth: 1,
-        };
+        // initDatGui()
 
-        let a = gui.add(option, 'width', 1, 10);
-        let b = gui.add(option, 'height', 1, 10);
-        let c = gui.add(option, 'depth', 1, 10);
-        a.onFinishChange(datChange)
-        b.onFinishChange(datChange)
-        c.onFinishChange(datChange)
+        function initDatGui() {
+            let gui = new dat.GUI({
+                name: 'MY GUI',
+            })
+            const option = {
+                width: 8,
+                height: 4,
+                depth: 1,
+            }
 
-        function datChange(res) {
-          init(option.width, option.height, option.depth)
+            let a = gui.add(option, 'width', 1, 10)
+            let b = gui.add(option, 'height', 1, 10)
+            let c = gui.add(option, 'depth', 1, 10)
+            a.onFinishChange(datChange)
+            b.onFinishChange(datChange)
+            c.onFinishChange(datChange)
+
+            function datChange(res) {
+                init(option.width, option.height, option.depth)
+            }
+
+            console.log(gui)
+            // gui.onChange((res)=> {
+            //   console.log(res)
+            // })
         }
-
-        console.log(gui)
-        // gui.onChange((res)=> {
-        //   console.log(res)
-        // })
-
-      }
     },
-  methods: {
-
-  }
+    methods: {},
 }
 </script>
 
